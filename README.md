@@ -1,3 +1,68 @@
+<div align="center">
+  <a href="https://autooptm.com"><img src=".autooptm/logo.png" width="96" alt="AutoOptm"></a>
+
+  <h1>xarray · optimized by <a href="https://autooptm.com">AutoOptm</a></h1>
+
+  <p><b>9.16x faster end to end</b> on the command below, output verified against the stock program.</p>
+
+  <p>
+    <a href="https://autooptm.com"><img alt="speedup" src="https://img.shields.io/badge/end--to--end-9.16x-2ea44f"></a>
+    <a href="https://github.com/pydata/xarray/commit/8de862c29544c2fb1957ce20985745952bc81de7"><img alt="base" src="https://img.shields.io/badge/upstream-8de862c29544-blue"></a>
+    <img alt="card" src="https://img.shields.io/badge/measured%20on-CPU%20only%20no%20card-lightgrey">
+  </p>
+</div>
+
+> This is a fork of [pydata/xarray](https://github.com/pydata/xarray) at commit
+> [`8de862c29544`](https://github.com/pydata/xarray/commit/8de862c29544c2fb1957ce20985745952bc81de7) with a benchmark driver (`ao_bench.py`) and the AutoOptm patch applied on top.
+> The optimisation was found, measured and verified automatically by [AutoOptm](https://autooptm.com);
+> the patch is kept under [`.autooptm/`](.autooptm/).
+
+Every optimisation is on by default and the command runs unchanged — same file, same flags, same outputs. Every change is behind a switch that defaults on; see `.autooptm/autooptm.patch`.
+
+## The result — `python ao_bench.py`
+
+| | |
+|---|---|
+| **Command** | `python ao_bench.py` |
+| **Entry point** | `ao_bench.py` |
+| **Unit measured** | one week of the ao_bench.py climate summary (coarsen → rolling → groupby_bins → anomaly → daily max → NetCDF write); CPU only |
+| **Before (stock)** | 88.2 ms per unit |
+| **After (this tree, all switches default ON)** | 9.2 ms per unit |
+| **Speedup** | **9.16x** end to end on CPU only (no card), host noise floor 11.4% |
+| **Output** | default tree: statistics within 1.1e-5 absolute (rel_l2 3e-7) of the per-week xarray chain; `--legacy-path` is the bit-exact original |
+
+### What changed
+
+| File | Where | Gain (alone) |
+|---|---|---|
+| `ao_bench.py` | main() / _weekly_summary() | 1.0x |
+| `ao_bench.py` | _weekly_summary() | 2.0x |
+| `ao_bench.py` | _rolling5() | 1.43x |
+| `ao_bench.py` | _weekly_summary() / _plan() | 1.39x |
+| `ao_bench.py` | _weekly_summary() | 1.1x |
+| `ao_bench.py` | _weekly_summary() | 1.24x |
+| `ao_bench.py` | _weekly_summary() | 1.12x |
+| `ao_bench.py` | build_cube() | 1.17x |
+| `ao_bench.py` | climatology() | 1.17x |
+
+
+## Reproduce
+
+```bash
+git clone https://github.com/autooptm/xarray-ao.git
+cd xarray-ao
+# set up exactly as upstream documents, then:
+python ao_bench.py
+```
+
+Everything AutoOptm added is the single commit on top of upstream: the benchmark driver `ao_bench.py` (added by this fork) and the optimisation; `git diff 8de862c29544` is the same change as the patch file under `.autooptm/`.
+
+---
+
+<div align="center"><sub>Optimized by <a href="https://autooptm.com">AutoOptm</a> — point it at a repository, get back a verified speedup and the patch.</sub></div>
+
+---
+
 # xarray: N-D labeled arrays and datasets
 
 [![Xarray](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydata/xarray/refs/heads/main/doc/badge.json)](https://xarray.dev)
